@@ -78,21 +78,20 @@ def get_song_by_id(id):
     
     return jsonify(str(song))
 
-@app.route("/song/<int:id>", methods=["POST"])
-def create_song(id):
-    song_data = request.get_json()
-
-    existing_song = db.songs.find_one({"id": id})
-
-    if existing_song:
-        return jsonify({"Message": f"song with id {id} already present"}), 302
-
-    song_data["id"] = id
-
-    db.songs.insert_one(song_data)
-
-    return jsonify(song_data), 201
-
+@app.route("/song", methods=["POST"])
+def create_song():
+    # get data from the json body
+    song_in = request.json
+    print(song_in["id"])
+    # if the id is already there, return 303 with the URL for the resource
+    song = db.songs.find_one({"id": song_in["id"]})
+    if song:
+        return {
+            "Message": f"song with id {song_in['id']} already present"
+        }, 302
+    insert_id: InsertOneResult = db.songs.insert_one(song_in)
+    return {"inserted id": parse_json(insert_id.inserted_id)}, 201
+    
 @app.route("/song/<int:id>", methods=["PUT"])
 def update_song(id):
     request_data = request.get_json()
